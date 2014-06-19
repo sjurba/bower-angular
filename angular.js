@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.2.19-build.256+sha.8b25ea1
+ * @license AngularJS v1.2.19-local+sha.87c01a0
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -68,7 +68,7 @@ function minErr(module) {
       return match;
     });
 
-    message = message + '\nhttp://errors.angularjs.org/1.2.19-build.256+sha.8b25ea1/' +
+    message = message + '\nhttp://errors.angularjs.org/1.2.19-local+sha.87c01a0/' +
       (module ? module + '/' : '') + code;
     for (i = 2; i < arguments.length; i++) {
       message = message + (i == 2 ? '?' : '&') + 'p' + (i-2) + '=' +
@@ -1953,7 +1953,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.2.19-build.256+sha.8b25ea1',    // all of these placeholder strings will be replaced by grunt's
+  full: '1.2.19-local+sha.87c01a0',    // all of these placeholder strings will be replaced by grunt's
   major: 1,    // package task
   minor: 2,
   dot: 19,
@@ -7852,6 +7852,10 @@ function $HttpProvider() {
      *      for more information.
      *    - **responseType** - `{string}` - see
      *      [requestType](https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#responseType).
+     *    - **xhrFields** - `{object}` - Object that will be passed directly to
+     *      [XMLHttpRequest()](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#XMLHttpRequest%28%29),
+     *      that can be used to set [non-standard properties](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#Non-standard_properties).
+     *      This object can also be set on the `$http.defaults` object to apply it globally.
      *
      * @returns {HttpPromise} Returns a {@link ng.$q promise} object with the
      *   standard `then` method and two http specific methods: `success` and `error`. The `then`
@@ -7961,7 +7965,8 @@ function $HttpProvider() {
       var config = {
         method: 'get',
         transformRequest: defaults.transformRequest,
-        transformResponse: defaults.transformResponse
+        transformResponse: defaults.transformResponse,
+        xhrFields: defaults.xhrFields,
       };
       var headers = mergeHeaders(requestConfig);
 
@@ -8256,7 +8261,7 @@ function $HttpProvider() {
         }
 
         $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout,
-            config.withCredentials, config.responseType);
+            config.withCredentials, config.responseType, config.xhrFields);
       }
 
       return promise;
@@ -8332,7 +8337,7 @@ function $HttpProvider() {
   }];
 }
 
-function createXhr(method) {
+function createXhr(method, xhrFields) {
     //if IE and the method is not RFC2616 compliant, or if XMLHttpRequest
     //is not available, try getting an ActiveXObject. Otherwise, use XMLHttpRequest
     //if it is available
@@ -8340,7 +8345,7 @@ function createXhr(method) {
       !window.XMLHttpRequest)) {
       return new window.ActiveXObject("Microsoft.XMLHTTP");
     } else if (window.XMLHttpRequest) {
-      return new window.XMLHttpRequest();
+      return new window.XMLHttpRequest(xhrFields);
     }
 
     throw minErr('$httpBackend')('noxhr', "This browser does not support XMLHttpRequest.");
@@ -8372,7 +8377,7 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
   var ABORTED = -1;
 
   // TODO(vojta): fix the signature
-  return function(method, url, post, callback, headers, timeout, withCredentials, responseType) {
+  return function(method, url, post, callback, headers, timeout, withCredentials, responseType, xhrFields) {
     var status;
     $browser.$$incOutstandingRequestCount();
     url = url || $browser.url();
@@ -8391,7 +8396,7 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
       });
     } else {
 
-      var xhr = createXhr(method);
+      var xhr = createXhr(method, xhrFields);
 
       xhr.open(method, url, true);
       forEach(headers, function(value, key) {
